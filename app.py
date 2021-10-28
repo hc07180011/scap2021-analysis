@@ -43,7 +43,7 @@ def pd_run_query(query):
 @st.cache
 def convert_df(df):
     # IMPORTANT: Cache the conversion to prevent computation on every rerun
-    return df.to_csv().encode('utf_8_sig')
+    return df.to_csv().encode('utf-8-sig')
 
 
 def test_selector():
