@@ -9,11 +9,14 @@ import tempfile
 import numpy as np
 import matplotlib.pyplot as plt
 
-sheet_url = st.secrets["public_gsheets_url"]
-conn = connect()
-
 
 def data_preprocessing() -> sqlite3.Connection:
+    try:
+        sheet_url = st.secrets["public_gsheets_url"]
+        conn = connect()
+    except:
+        print('secrets not found')
+        return
 
     try:
         os.remove("fugle.db")
