@@ -1,15 +1,44 @@
+import streamlit as st
 import os
+from gsheetsdb import connect
+import pandas as pd
+import io
 import pickle
 import sqlite3
 import tempfile
-import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-from src import process as pss
+
+sheet_url = st.secrets["public_gsheets_url"]
+conn = connect()
 
 
-def column_loader() -> dict:
-    return dict({
+def data_preprocessing() -> sqlite3.Connection:
+
+    try:
+        os.remove("fugle.db")
+    except:
+        pass
+    con = sqlite3.connect("fugle.db")
+
+    cur = con.cursor()
+    with open(os.path.join("sql", "schema.sql"), "r") as f:
+        cur.execute(f.read())
+    df = pd.read_sql(
+        f'SELECT * FROM "{sheet_url}"', conn)
+    for i in range(len(df)):
+        cur.execute(
+            "INSERT INTO responds VALUES ({},\"{}\")".format(
+                i, "\",\"".join([str(x) for x in df.loc[i, :].to_numpy()])
+            )
+        )
+
+    con.commit()
+    return con
+
+
+def column_loader(inverse=False) -> dict:
+    columns = dict({
         "id": "id",
         "A": "於填寫這份問卷之前，您對於「串接 API 程式執行程式交易」的理解及使用經驗為何？",
         "B": "您為何會選擇套裝軟體執行程式交易？",
@@ -50,73 +79,6 @@ def column_loader() -> dict:
         "AK": "自訂ID",
         "AL": "備註"
     })
-
-
-def data_preprocessing(data_dir: str = "data") -> sqlite3.Connection:
-    os.makedirs(data_dir, exist_ok=True)
-    csv_paths = os.listdir(data_dir)
-
-    df = pd.DataFrame({})
-    for path in list([x for x in csv_paths if ".csv" in x]):
-        df = df.append(
-            pd.read_csv(
-                os.path.join(data_dir, path),
-                encoding="utf-8"
-            ),
-            ignore_index=True
-        )
-
-    if not len(df):
-        raise FileNotFoundError
-
-    try:
-        os.remove("fugle.db")
-    except:
-        pass
-
-    con = sqlite3.connect("fugle.db")
-
-    cur = con.cursor()
-    with open(os.path.join("sql", "schema.sql"), "r") as f:
-        cur.execute(f.read())
-
-    for i in range(len(df)):
-        cur.execute(
-            "INSERT INTO responds VALUES ({},\"{}\")".format(
-                i, "\",\"".join([str(x) for x in df.loc[i, :].to_numpy()])
-            )
-        )
-
-    con.commit()
-    return con
-
-
-def main() -> None:
-
-    con = pss.data_preprocessing()
-    column_names = column_loader()
-
-    output_dir = "outputs"
-    os.makedirs(output_dir, exist_ok=True)
-
-    for sql_path in list([x for x in os.listdir("sql") if x[-4:] == ".sql"]):
-        if sql_path == "schema.sql":
-            continue
-
-        pd.read_sql_query(
-            open(os.path.join("sql", sql_path), "r").read(),
-            con=con
-        ).rename(
-            columns=column_names,
-        ).to_excel(
-            os.path.join(
-                output_dir,
-                "{}.xlsx".format(os.path.splitext(sql_path)[0])
-            ),
-            encoding="utf-8",
-            index=False
-        )
-
-
-if __name__ == "__main__":
-    main()
+    if inverse:
+        columns = {v: k for k, v in columns.items()}
+    return columns
