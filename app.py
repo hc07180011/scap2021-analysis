@@ -2,10 +2,11 @@ import streamlit as st
 import os
 from src import test_hypo, process as ps
 from gsheetsdb import connect
+import pandasql as psql
 import pandas as pd
 import io
 
-DEPLOY_TO_HEROKU = True
+DEPLOY_TO_HEROKU = False
 
 EMOJI_URL = "https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/120/twitter/282/chart-increasing_1f4c8.png"
 
@@ -22,6 +23,9 @@ else:
     sheet_url = os.environ['PUBLIC_GSHEETS_URL']
 
 
+def pysqldf(q): return psql.sqldf(q, globals())
+
+
 # Perform SQL query on the Google Sheet.
 # Uses st.cache to only rerun when the query changes or after 10 min.
 @st.cache(ttl=600)
@@ -36,41 +40,84 @@ def pd_run_query(query):
     return df
 
 
+@st.cache
+def convert_df(df):
+    # IMPORTANT: Cache the conversion to prevent computation on every rerun
+    return df.to_csv().encode('utf_8_sig')
+
+
 def test_selector():
+
     df = pd.read_sql(
         f'SELECT * FROM "{sheet_url}"', conn)
     df = df.fillna('')
 
-    df.rename(columns=ps.column_loader(inverse=True), inplace=True)
+    responds = df.rename(columns=ps.column_loader(inverse=True))
+    responds = responds[~(responds['L'] == '尚無投資經驗')]
+    global_len = len(responds)
 
-    st.write(df.shape[0])
+    custom_query = st.expander('Need Custom Query?')
+    with custom_query:
+        st.markdown("""Notes:
++ Table Name is `responds`
++ You can see all the features (columns) in the sidebar by pressing that bling bling expander ✨
+<br/><br/>""", unsafe_allow_html=True)
 
-    output_df = df.query(
-        '`D` like "%能省去大量觀盤及執行交易的時間%"'
-    ).rename(
-        columns=ps.column_loader(inverse=False),
-    ).reset_index(drop=True)
+        query_hypo_txt = st.text_input('Your Hypothesis', '假說')
+        query = st.text_area(label='Enter Your Query', value='''-- 21-40歲 + 注重效率 + 有台股交易需求
+SELECT *
+FROM   responds
+WHERE  (`X` = '21-30歲' OR `X` = '31-40歲')
+AND    `D` LIKE '%能省去大量觀盤及執行交易的時間%'
+AND    `N` LIKE '%台股市場%';''', height=180)
 
-    st.write(output_df)
-    st.write('...')
+        output_df = psql.sqldf(
+            query, locals())\
+            .rename(columns=ps.column_loader(inverse=False))
+        st.markdown(
+            f'''### {query_hypo_txt}
+({len(output_df)} out of {global_len} - {round(len(output_df)/global_len * 100,2)}%)''')
+        st.write(output_df)
 
-    output_df = pd.read_sql_query(
-        f"""SELECT *
-FROM   {sheet_url}
-WHERE  (`{ps.column_loader()['X']}` == '21-30歲' OR `{ps.column_loader()['X']}` == '31-40歲')
-AND    `{ps.column_loader()['D']}` LIKE '%能省去大量觀盤及執行交易的時間%'
-AND    `{ps.column_loader()['N']}` LIKE '%台股市場%'""",
-        con=conn
-    ).rename(
-        columns=ps.column_loader(inverse=False),
-    )
-    st.write('...')
+        row0_1, row0_spacer2, row0_2 = st.columns(
+            (1.2, .1, 1.2))
 
-    for sql_path in list([x for x in os.listdir("sql") if x[-4:] == ".sql"]):
+        with row0_1:
+            st.download_button(
+                label=f"📓 Download ({query_hypo_txt}.csv)",
+                data=convert_df(output_df),
+                file_name=f'{query_hypo_txt}.csv',
+                mime='text/csv',
+            )
+        with row0_2:
+            st.download_button(
+                label=f"🧑🏾‍💻 Download ({query_hypo_txt}.sql)",
+                data=query,
+                file_name=f'{query_hypo_txt}.sql',
+                mime='text/plain',
+            )
+        st.markdown("***")
+
+    for sql_path in list([x for x in os.listdir("sql/b") if x[-4:] == ".sql"]):
         if sql_path == "schema.sql":
             continue
 
-        # st.write(df)
+        output_df = psql.sqldf(
+            open(os.path.join("sql/b", sql_path), "r").read(), locals())\
+            .rename(columns=ps.column_loader(inverse=False))
+        hypo_txt = open(os.path.join("sql/b", sql_path),
+                        "r").readlines()[0][3:]
+        st.markdown(
+            f'''### {hypo_txt}
+({len(output_df)} out of {global_len} - {round(len(output_df)/global_len * 100,2)}%)''')
+        st.write(output_df)
+
+        st.download_button(
+            label=f"📓 Download ({hypo_txt}.csv)",
+            data=convert_df(output_df),
+            file_name=f'{hypo_txt}.csv',
+            mime='text/csv',
+        )
 
 
 def renderer():
@@ -101,9 +148,9 @@ def renderer():
 
         need_help = st.expander('需要幫忙嗎？ 👉')
         with need_help:
-            st.markdown("""不知道您欲查詢的投資標的？只要搜尋「股票代碼.TW」就可以繼續查詢，如「0050.TW」。完整的台股代碼可以參考[本國上市證券國際證券辨識號碼一覽表](https://isin.twse.com.tw/isin/C_public.jsp?strMode=2)。
+            st.markdown("""不知道您欲查詢的投資標的？只要搜尋「股票代碼.TW」就可以繼續查詢，如「0050.TW」。完整的台股代碼可以參考[本國上市證券國際證券辨識號碼一覽表](https: // isin.twse.com.tw/isin/C_public.jsp?strMode=2)。
 
-有些上櫃公司的代碼需要加上「.TWO」。如果出現錯誤，請至 [Yahoo! Finance](https://finance.yahoo.com) 搜尋。""")
+有些上櫃公司的代碼需要加上「.TWO」。如果出現錯誤，請至[Yahoo! Finance](https: // finance.yahoo.com) 搜尋。""")
 
     with row2_2:
         capital = st.number_input("輸入本金", value=10000)
@@ -165,9 +212,15 @@ def main():
                                     selector)
 
     if app_mode == selector[0]:
-        renderer()
+        st.sidebar.info('Still empty...')
     elif app_mode == selector[1]:
         test_selector()
+
+        need_help = st.sidebar.expander(
+            "🙋🏾‍♂️ Not sure what features are in our data?")
+        with need_help:
+            st.json(ps.column_loader())
+
     elif app_mode == selector[2]:
         st.sidebar.info('Still empty...')
 
