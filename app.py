@@ -5,6 +5,8 @@ from gsheetsdb import connect
 import pandas as pd
 import io
 
+DEPLOY_TO_HEROKU = True
+
 EMOJI_URL = "https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/120/twitter/282/chart-increasing_1f4c8.png"
 # Set page title and favicon.
 st.set_page_config(
@@ -13,7 +15,10 @@ st.set_page_config(
 
 conn = connect()
 
-sheet_url = st.secrets["public_gsheets_url"]
+if not DEPLOY_TO_HEROKU:
+    sheet_url = st.secrets["public_gsheets_url"]
+else:
+    sheet_url = os.environ['PUBLIC_GSHEETS_URL']
 
 
 # Perform SQL query on the Google Sheet.
