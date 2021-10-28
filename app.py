@@ -6,7 +6,7 @@ import pandasql as psql
 import pandas as pd
 import io
 
-DEPLOY_TO_HEROKU = True
+DEPLOY_TO_HEROKU = False
 
 EMOJI_URL = "https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/120/twitter/282/chart-increasing_1f4c8.png"
 
@@ -43,7 +43,7 @@ def pd_run_query(query):
 @st.cache
 def convert_df(df):
     # IMPORTANT: Cache the conversion to prevent computation on every rerun
-    return df.to_csv().encode('utf-8-sig')
+    return df.to_csv(encoding='utf_8_sig')
 
 
 def test_selector():
@@ -63,7 +63,7 @@ def test_selector():
 + You can see all the features (columns) in the sidebar by pressing that bling bling expander ✨
 <br/><br/>""", unsafe_allow_html=True)
 
-        query_hypo_txt = st.text_input('Your Hypothesis', '假說')
+        query_hypo_txt = st.text_input('Your Hypothesis', '假說').strip()
         query = st.text_area(label='Enter Your Query', value='''-- 21-40歲 + 注重效率 + 有台股交易需求
 SELECT *
 FROM   responds
@@ -106,7 +106,7 @@ AND    `N` LIKE '%台股市場%';''', height=180)
             open(os.path.join("sql/b", sql_path), "r").read(), locals())\
             .rename(columns=ps.column_loader(inverse=False))
         hypo_txt = open(os.path.join("sql/b", sql_path),
-                        "r").readlines()[0][3:]
+                        "r").readlines()[0][3:].strip()
         st.markdown(
             f'''### {hypo_txt}
 ({len(output_df)} out of {global_len} - {round(len(output_df)/global_len * 100,2)}%)''')
