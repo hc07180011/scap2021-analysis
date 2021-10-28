@@ -46,14 +46,15 @@ def convert_df(df):
     return df.to_csv(encoding='utf_8_sig')
 
 
-def test_selector():
+def test_selector(include=False):
 
     df = pd.read_sql(
         f'SELECT * FROM "{sheet_url}"', conn)
     df = df.fillna('')
 
     responds = df.rename(columns=ps.column_loader(inverse=True))
-    responds = responds[~(responds['L'] == '尚無投資經驗')]
+    if not include:
+        responds = responds[~(responds['L'] == '尚無投資經驗')]
     global_len = len(responds)
 
     custom_query = st.expander('Need Custom Query?')
@@ -212,14 +213,16 @@ def main():
                                     selector)
 
     if app_mode == selector[0]:
-        test_selector()
+        include = st.checkbox('Including everything! (Default 已篩選掉沒投資過的人)')
+        test_selector(include=include)
 
         need_help = st.sidebar.expander(
             "🙋🏾‍♂️ Not sure what features are in our data?")
         with need_help:
             st.json(ps.column_loader())
     elif app_mode == selector[1]:
-        test_selector()
+        include = st.checkbox('Including everything! (Default 已篩選掉沒投資過的人)')
+        test_selector(include=include)
 
         need_help = st.sidebar.expander(
             "🙋🏾‍♂️ Not sure what features are in our data?")
