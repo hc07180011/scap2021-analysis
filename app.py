@@ -213,7 +213,8 @@ def main():
                                     selector)
 
     if app_mode == selector[0]:
-        include = st.checkbox('Including everything! (Default 已篩選掉沒投資過的人)')
+        include = st.sidebar.checkbox(
+            'Including everything! (Default 已篩選掉沒投資過的人)')
         test_selector(include=include)
 
         need_help = st.sidebar.expander(
@@ -221,7 +222,8 @@ def main():
         with need_help:
             st.json(ps.column_loader())
     elif app_mode == selector[1]:
-        include = st.checkbox('Including everything! (Default 已篩選掉沒投資過的人)')
+        include = st.sidebar.checkbox(
+            'Including everything! (Default 已篩選掉沒投資過的人)')
         test_selector(include=include)
 
         need_help = st.sidebar.expander(
