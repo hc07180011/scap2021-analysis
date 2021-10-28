@@ -212,7 +212,12 @@ def main():
                                     selector)
 
     if app_mode == selector[0]:
-        st.sidebar.info('Still empty...')
+        test_selector()
+
+        need_help = st.sidebar.expander(
+            "🙋🏾‍♂️ Not sure what features are in our data?")
+        with need_help:
+            st.json(ps.column_loader())
     elif app_mode == selector[1]:
         test_selector()
 
