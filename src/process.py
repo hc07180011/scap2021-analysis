@@ -11,6 +11,7 @@ import matplotlib.pyplot as plt
 
 
 def data_preprocessing() -> sqlite3.Connection:
+    # for local use only
     try:
         sheet_url = st.secrets["public_gsheets_url"]
         conn = connect()
