@@ -90,7 +90,7 @@ def data_preprocessing(data_dir: str = "data") -> sqlite3.Connection:
     return con
 
 
-def plot_pie_with_raw_data(data: np.ndarray, column_names: dict, title: str, output_dir: str) -> None:
+def pie_with_raw_data(data: np.ndarray, column_names: dict, title: str, output_dir: str) -> None:
 
     value_counts = dict()
     for val in data:
@@ -120,7 +120,7 @@ def plot_pie_with_raw_data(data: np.ndarray, column_names: dict, title: str, out
     keys = list([
         "{} ({}%)".format(
             (k if len(k) < 10 else "{} ...".format(k[:10])) if k != "nan" else "未填答",
-            round(v / sum(list(value_counts.values())) * 100, 2)
+            round(v / len(data) * 100, 2)
         )
         for k, v in sorted(value_counts.items(), key=lambda item: -item[1])
     ])
@@ -131,7 +131,7 @@ def plot_pie_with_raw_data(data: np.ndarray, column_names: dict, title: str, out
     plt.title("「{}」之比例".format(
         column_names[title] if len(column_names[title]) < 20 else "{} ...".format(column_names[title][:20])
     ), fontproperties=font)
-    plt.savefig(os.path.join(output_dir, "{}.png".format(title)))
+    plt.savefig(os.path.join(output_dir, "{}.svg".format(title)))
     plt.close()
 
 
@@ -161,13 +161,18 @@ def main() -> None:
             index=False
         )
 
+    data = pd.read_sql_query(open(os.path.join("sql", "0.sql"), "r").read(), con=con)
     for key in column_names:
         if key == "id":
             # Skip first col
             continue
 
-        data = pd.read_sql_query("SELECT {} FROM responds".format(key), con=con).to_numpy().flatten()
-        plot_pie_with_raw_data(data, column_names, key, output_dir)
+        pie_with_raw_data(
+            data[key].to_numpy().flatten(),
+            column_names,
+            key,
+            output_dir
+        )
 
 
 if __name__ == "__main__":
