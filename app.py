@@ -148,6 +148,10 @@ and M = '是';
 
     # 解決痛點：程式能力不足、覺得安裝或申請麻煩的人、沒聽過但回答「是」的人、認為「我認為此券商的產品本身系統穩定度夠、具有技術支援、響應時間短」重要的人
 
+    notes = st.expander('''Some thoughts... 🤔''')
+    with notes:
+        st.image('img/flow1.png', caption='流程發想')
+        st.image('img/flow2.png', caption='Flow on this page')
     st.markdown("""## #1 Pain
 解決痛點 (things that Fugle possesses)：
 
