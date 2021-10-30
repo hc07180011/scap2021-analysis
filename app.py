@@ -1,20 +1,27 @@
-import streamlit as st
-import os
-from src import process as ps
-from gsheetsdb import connect
-import pandasql as psql
-import pandas as pd
-import io
 import plotly.express as px
-
+import io
+import pandas as pd
+import pandasql as psql
+from gsheetsdb import connect
+from src import process as ps
+import os
+import streamlit as st
 DEPLOY_TO_HEROKU = True
+
 
 EMOJI_URL = "https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/120/twitter/282/chart-increasing_1f4c8.png"
 
 # Set page title and favicon.
 st.set_page_config(
     page_title="2021 SCAP <> Fugle Market Segmentation",
-    page_icon=EMOJI_URL, layout="wide"
+    page_icon=EMOJI_URL, layout="wide",
+    menu_items={
+        'Get Help': None,
+        'Report a bug': None,
+        'About': '''**如何引出 TA 的發想**放在 `Hypo Testing - Funnel` 裡 (under `Sidebar/Select a testing method to continue`)。
+
+然後我實在是有點對現在手上的資料沒有頭緒，可能真正的 TA 還是得透過訪談後得到。'''
+    }
 )
 
 conn = connect()
@@ -368,6 +375,9 @@ def main():
         sidebar_helper(app_method)
     elif app_mode == mode_selector[2]:
         st.sidebar.info('Still empty...')
+
+    st.sidebar.info(
+        'For more info, please check out the `About` section under the Hamburger menu.')
 
 
 if __name__ == '__main__':
