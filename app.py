@@ -137,7 +137,15 @@ def ta_funnel(include=False):
 
     # 解決痛點：程式能力不足、覺得安裝或申請麻煩的人、沒聽過但回答「是」的人、認為「我認為此券商的產品本身系統穩定度夠、具有技術支援、響應時間短」重要的人
 
-    st.markdown('## #1 Pain')
+    st.markdown("""## #1 Pain
+解決痛點 (things that Fugle possesses)：
+
++ 程式能力不足
++ 覺得安裝或申請麻煩的人
++ 沒聽過但回答「是」的人
++ 認為「我認為此券商的產品本身系統穩定度夠、具有技術支援、響應時間短」重要的人
+""")
+
     query1 = """select * from responds
 where ((C like '%程式能力不足'
 or C like '%安裝及申請%') and C <> '')
@@ -181,7 +189,12 @@ where N like '台%';
             f'{len(output_df)} ({round(len(output_df) / q1_cnt * 100, 2)}%)')
         st.write(output_df)
 
-    st.markdown('## #3 Pain + Fit + Ready')
+    st.markdown("""## #3 Pain + Fit + Ready
++ 已經在寫 Python or Node 的人
++ 不能是完全沒寫過程式的人
++ 有自己的 portfolio 應該會馬上可以體驗到
+""")
+
     query3 = """select * from output_df
 where U like 'Python' or U like '%Node%'
 and T not like '完全沒寫%'
@@ -194,6 +207,7 @@ and M = '是';
         f'{len(output_df)} ({round(len(output_df) / q2_cnt * 100, 2)}%)')
     st.write(output_df)
 
+    # final target customer traits
     st.markdown('## Target Customers')
     row4_1, row4_2 = st.columns(
         (1, 1))
@@ -212,12 +226,38 @@ and M = '是';
 
         st.plotly_chart(fig, use_container_width=True)
 
+    fig = px.bar(output_df.groupby('P').agg(
+        'size').reset_index(), x='P', y=0, labels={
+        '0': 'Count', 'P': 'Frequency'})
+    fig.update_layout(margin=dict(t=0, b=0, l=0, r=0))
+
+    st.plotly_chart(fig, use_container_width=True)
+
+    fig = px.bar(output_df.groupby('O').agg(
+        'size').reset_index(), x='O', y=0, labels={
+        '0': 'Count', 'O': 'Frequency'})
+    fig.update_layout(margin=dict(t=0, b=0, l=0, r=0))
+
+    st.plotly_chart(fig, use_container_width=True)
+
     row5_1, row5_2 = st.columns(
         (1, 1))
     with row5_1:
-        fig = px.bar(output_df.groupby('Y').agg(
-            'size').reset_index(), x='Y', y=0, labels={
-            '0': 'Count', 'Y': 'Study Background'})
+        study_background = [
+            '商管/人文/社會相關 (e.g. 企管、財會、歷史、哲學等)', '資訊/工程/數理相關 (e.g.資工、電機、資管、土木、機械、化工等)', '醫學/生物/農業相關 (e.g. 醫科、護理、森林、生科等)', '藝術/傳播相關 (e.g. 傳播、音樂、設計等)']
+        sb_cnt = dict()
+        for val in output_df['Y']:
+            for ch in study_background:
+                if ch in val:
+                    if ch not in sb_cnt:
+                        sb_cnt[ch] = 1
+                    else:
+                        sb_cnt[ch] += 1
+        sb_dict = {'Background': [], 'Count': []}
+        for key, value in sb_cnt.items():
+            sb_dict['Background'].append(key)
+            sb_dict['Count'].append(value)
+        fig = px.bar(sb_dict, x='Background', y='Count')
         fig.update_layout(margin=dict(t=0, b=0, l=0, r=0))
 
         st.plotly_chart(fig, use_container_width=True)
@@ -238,6 +278,7 @@ and M = '是';
     learn_coding_ch = ['國內線上學習平台（如量化通、HaHow 等）', '看 Medium 文章',
                        '閱讀書籍', '國外線上學習平台（如 Cousera、Udemy、edX 等）', 'YouTube 頻道', '學校上課']
 
+    # this is probably the dumbest way, but I am not in the stackoverflow mode
     lich_cnt = dict()
     for val in output_df['R']:
         for ch in learn_investment_ch:
