@@ -13,7 +13,8 @@ EMOJI_URL = "https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/1
 
 # Set page title and favicon.
 st.set_page_config(
-    page_title="2021 SCAP <> Fugle Market Segmentation", page_icon=EMOJI_URL, layout="wide"
+    page_title="2021 SCAP <> Fugle Market Segmentation",
+    page_icon=EMOJI_URL, layout="wide"
 )
 
 conn = connect()
@@ -130,7 +131,17 @@ AND    `N` LIKE '%台股市場%';''', height=180)
         )
 
 
-def ta_funnel(include=False):
+def ta_funnel(include=False, query1='''select * from responds
+where ((C like '%程式能力不足'
+or C like '%安裝及申請%') and C <> '')
+or H like '是'
+or (J not like '我認為此券商的產品本身系統穩定度夠、具有技術支援、響應時間短' and J <> '');''', query2="""select * from output_df
+where N like '台%';
+    """, query3="""select * from output_df
+where U like 'Python' or U like '%Node%'
+and T not like '完全沒寫%'
+and M = '是';
+    """):
     # target audience funnel testing
     responds = load_df(include).reset_index(drop=True)
     global_len = len(responds)
@@ -146,12 +157,6 @@ def ta_funnel(include=False):
 + 認為「我認為此券商的產品本身系統穩定度夠、具有技術支援、響應時間短」重要的人
 """)
 
-    query1 = """select * from responds
-where ((C like '%程式能力不足'
-or C like '%安裝及申請%') and C <> '')
-or H like '是'
-or (J not like '我認為此券商的產品本身系統穩定度夠、具有技術支援、響應時間短' and J <> '');
-    """
     output_df = psql.sqldf(query1, locals())
     q1_cnt = len(output_df)
 
@@ -170,9 +175,6 @@ or (J not like '我認為此券商的產品本身系統穩定度夠、具有技�
 
     st.markdown('## #2 Pain + Fit (市場為台股)')
 
-    query2 = """select * from output_df
-where N like '台%';
-    """
     output_df = psql.sqldf(query2, locals())
     q2_cnt = len(output_df)
 
@@ -195,11 +197,6 @@ where N like '台%';
 + 有自己的 portfolio 應該會馬上可以體驗到
 """)
 
-    query3 = """select * from output_df
-where U like 'Python' or U like '%Node%'
-and T not like '完全沒寫%'
-and M = '是';
-    """
     output_df = psql.sqldf(query3, locals())
     q3_cnt = len(output_df)
 
@@ -328,15 +325,26 @@ def sidebar_helper(app_method=method_selector[0]):
     include = st.sidebar.checkbox(
         'Including everything! (Default 已篩選掉沒投資過的人)')
 
-    if app_method == method_selector[0]:
-        test_selector(include=include)
-    elif app_method == method_selector[1]:
-        ta_funnel(include=include)
-
     need_help = st.sidebar.expander(
         "🙋🏾‍♂️ Not sure what features are in our data?")
     with need_help:
         st.json(ps.column_loader())
+
+    if app_method == method_selector[0]:
+        test_selector(include=include)
+    elif app_method == method_selector[1]:
+
+        q1 = st.sidebar.text_area(
+            'Query 1 - Pain', '''select * from responds where ((C like '%程式能力不足' or C like '%安裝及申請%') and C <> '') or H like '是' or (J not like '我認為此券商的產品本身系統穩定度夠、具有技術支援、響應時間短' and J <> '');''')
+        q2 = st.sidebar.text_area(
+            'Query 2 - Pain + Fit', '''select * from output_df
+where N like '台%';''')
+        q3 = st.sidebar.text_area(
+            'Query 3 - Pain + Fit + Ready', '''select * from output_df
+where U like 'Python' or U like '%Node%'
+and T not like '完全沒寫%'
+and M = '是';''')
+        ta_funnel(include, q1, q2, q3)
 
 
 def main():
