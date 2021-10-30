@@ -5,8 +5,9 @@ from gsheetsdb import connect
 import pandasql as psql
 import pandas as pd
 import io
+import plotly.express as px
 
-DEPLOY_TO_HEROKU = True
+DEPLOY_TO_HEROKU = False
 
 EMOJI_URL = "https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/120/twitter/282/chart-increasing_1f4c8.png"
 
@@ -21,6 +22,9 @@ if not DEPLOY_TO_HEROKU:
     sheet_url = st.secrets["public_gsheets_url"]
 else:
     sheet_url = os.environ['PUBLIC_GSHEETS_URL']
+
+mode_selector = ["All", "Public", "Fugle"]
+method_selector = ["Hypo Querying", "Hypo Testing - Funnel"]
 
 
 def pysqldf(q): return psql.sqldf(q, globals())
@@ -46,8 +50,8 @@ def convert_df(df):
     return df.to_csv(encoding='utf_8_sig')
 
 
-def test_selector(include=False):
-
+@st.cache()
+def load_df(include=False):
     df = pd.read_sql(
         f'SELECT * FROM "{sheet_url}"', conn)
     df = df.fillna('')
@@ -55,6 +59,11 @@ def test_selector(include=False):
     responds = df.rename(columns=ps.column_loader(inverse=True))
     if not include:
         responds = responds[~(responds['L'] == '尚無投資經驗')]
+    return responds
+
+
+def test_selector(include=False):
+    responds = load_df(include)
     global_len = len(responds)
 
     custom_query = st.expander('Need Custom Query?')
@@ -121,33 +130,188 @@ AND    `N` LIKE '%台股市場%';''', height=180)
         )
 
 
+def ta_funnel(include=False):
+    # target audience funnel testing
+    responds = load_df(include).reset_index(drop=True)
+    global_len = len(responds)
+
+    # 解決痛點：程式能力不足、覺得安裝或申請麻煩的人、沒聽過但回答「是」的人、認為「我認為此券商的產品本身系統穩定度夠、具有技術支援、響應時間短」重要的人
+
+    st.markdown('## #1 Pain')
+    query1 = """select * from responds
+where ((C like '%程式能力不足'
+or C like '%安裝及申請%') and C <> '')
+or H like '是'
+or (J not like '我認為此券商的產品本身系統穩定度夠、具有技術支援、響應時間短' and J <> '');
+    """
+    output_df = psql.sqldf(query1, locals())
+    q1_cnt = len(output_df)
+
+    row1_1, row1_2 = st.columns(
+        (4.5, 1.5))
+    with row1_1:
+        fig = px.sunburst(output_df, path=['A', 'T'])
+        fig.update_layout(margin=dict(t=0, b=0, l=0, r=0))
+
+        st.plotly_chart(fig, use_container_width=True)
+
+    with row1_2:
+        st.markdown(
+            f'{len(output_df)} ({round(len(output_df) / global_len * 100, 2)}%)')
+        st.write(output_df)
+
+    st.markdown('## #2 Pain + Fit (市場為台股)')
+
+    query2 = """select * from output_df
+where N like '台%';
+    """
+    output_df = psql.sqldf(query2, locals())
+    q2_cnt = len(output_df)
+
+    row2_1, row2_2 = st.columns(
+        (4.5, 1.5))
+    with row2_1:
+        fig = px.sunburst(output_df, path=['A', 'T'])
+        fig.update_layout(margin=dict(t=0, b=0, l=0, r=0))
+
+        st.plotly_chart(fig, use_container_width=True)
+
+    with row2_2:
+        st.markdown(
+            f'{len(output_df)} ({round(len(output_df) / q1_cnt * 100, 2)}%)')
+        st.write(output_df)
+
+    st.markdown('## #3 Pain + Fit + Ready')
+    query3 = """select * from output_df
+where U like 'Python' or U like '%Node%'
+and T not like '完全沒寫%'
+and M = '是';
+    """
+    output_df = psql.sqldf(query3, locals())
+    q3_cnt = len(output_df)
+
+    st.markdown(
+        f'{len(output_df)} ({round(len(output_df) / q2_cnt * 100, 2)}%)')
+    st.write(output_df)
+
+    st.markdown('## Target Customers')
+    row4_1, row4_2 = st.columns(
+        (1, 1))
+    with row4_1:
+        fig = px.bar(output_df.groupby('X').agg(
+            'size').reset_index(), x='X', y=0, labels={
+            '0': 'Count', 'X': 'Age'})
+        fig.update_layout(margin=dict(t=0, b=0, l=0, r=0))
+
+        st.plotly_chart(fig, use_container_width=True)
+    with row4_2:
+        fig = px.bar(output_df.groupby('W').agg(
+            'size').reset_index(), x='W', y=0, labels={
+            '0': 'Count', 'W': 'Gender'})
+        fig.update_layout(margin=dict(t=0, b=0, l=0, r=0))
+
+        st.plotly_chart(fig, use_container_width=True)
+
+    row5_1, row5_2 = st.columns(
+        (1, 1))
+    with row5_1:
+        fig = px.bar(output_df.groupby('Y').agg(
+            'size').reset_index(), x='Y', y=0, labels={
+            '0': 'Count', 'Y': 'Study Background'})
+        fig.update_layout(margin=dict(t=0, b=0, l=0, r=0))
+
+        st.plotly_chart(fig, use_container_width=True)
+
+    with row5_2:
+        fig = px.bar(output_df.groupby('Z').agg(
+            'size').reset_index(), x='Z', y=0, labels={
+            '0': 'Count', 'Z': 'Occupation'})
+        fig.update_layout(margin=dict(t=0, b=0, l=0, r=0))
+
+        st.plotly_chart(fig, use_container_width=True)
+
+    st.markdown('#### Channels')
+
+    learn_investment_ch = ['資訊平台（如鉅亨網、 Investing.com、 Tradingview 等',
+                           'Podcast', '券商', 'YouTuber', '新聞（如 Yahoo 新聞、實體報紙、 LineToday 等）', '書籍', '自行 Google', '社群平台']
+
+    learn_coding_ch = ['國內線上學習平台（如量化通、HaHow 等）', '看 Medium 文章',
+                       '閱讀書籍', '國外線上學習平台（如 Cousera、Udemy、edX 等）', 'YouTube 頻道', '學校上課']
+
+    lich_cnt = dict()
+    for val in output_df['R']:
+        for ch in learn_investment_ch:
+            if ch in val:
+                if ch not in lich_cnt:
+                    lich_cnt[ch] = 1
+                else:
+                    lich_cnt[ch] += 1
+    lcch_cnt = dict()
+    for val in output_df['V']:
+        for ch in learn_coding_ch:
+            if ch in val:
+                if ch not in lcch_cnt:
+                    lcch_cnt[ch] = 1
+                else:
+                    lcch_cnt[ch] += 1
+
+    lcch_dict = {'Channel': [], 'Count': []}
+    for key, value in lcch_cnt.items():
+        lcch_dict['Channel'].append(key)
+        lcch_dict['Count'].append(value)
+
+    lich_dict = {'Channel': [], 'Count': []}
+    for key, value in lich_cnt.items():
+        lich_dict['Channel'].append(key)
+        lich_dict['Count'].append(value)
+
+    row5_1, row5_2 = st.columns(
+        (1, 1))
+    with row5_1:
+        st.write('程式學習管道')
+        fig = px.bar(lcch_dict, x='Channel', y='Count')
+        fig.update_layout(margin=dict(t=0, b=0, l=0, r=0))
+
+        st.plotly_chart(fig, use_container_width=True)
+
+    with row5_2:
+        st.write('投資理財管道')
+        fig = px.bar(lich_dict, x='Channel', y='Count')
+        fig.update_layout(margin=dict(t=0, b=0, l=0, r=0))
+
+        st.plotly_chart(fig, use_container_width=True)
+
+
+def sidebar_helper(app_method=method_selector[0]):
+    # ["Hyp Querying", "Hypo Testing - Funnel"]
+    include = st.sidebar.checkbox(
+        'Including everything! (Default 已篩選掉沒投資過的人)')
+
+    if app_method == method_selector[0]:
+        test_selector(include=include)
+    elif app_method == method_selector[1]:
+        ta_funnel(include=include)
+
+    need_help = st.sidebar.expander(
+        "🙋🏾‍♂️ Not sure what features are in our data?")
+    with need_help:
+        st.json(ps.column_loader())
+
+
 def main():
 
     st.sidebar.title("Channels")
-    selector = ["All", "Public", "Fugle"]
     app_mode = st.sidebar.selectbox("Select a channel to continue",
-                                    selector)
+                                    mode_selector)
 
-    if app_mode == selector[0]:
-        include = st.sidebar.checkbox(
-            'Including everything! (Default 已篩選掉沒投資過的人)')
-        test_selector(include=include)
+    app_method = st.sidebar.selectbox("Select a testing method to continue",
+                                      method_selector)
 
-        need_help = st.sidebar.expander(
-            "🙋🏾‍♂️ Not sure what features are in our data?")
-        with need_help:
-            st.json(ps.column_loader())
-    elif app_mode == selector[1]:
-        include = st.sidebar.checkbox(
-            'Including everything! (Default 已篩選掉沒投資過的人)')
-        test_selector(include=include)
-
-        need_help = st.sidebar.expander(
-            "🙋🏾‍♂️ Not sure what features are in our data?")
-        with need_help:
-            st.json(ps.column_loader())
-
-    elif app_mode == selector[2]:
+    if app_mode == mode_selector[0]:
+        sidebar_helper(app_method)
+    elif app_mode == mode_selector[1]:
+        sidebar_helper(app_method)
+    elif app_mode == mode_selector[2]:
         st.sidebar.info('Still empty...')
 
 
