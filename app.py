@@ -346,14 +346,15 @@ def sidebar_helper(app_method=method_selector[0]):
     elif app_method == method_selector[1]:
 
         q1 = st.sidebar.text_area(
-            'Query 1 - Pain', '''select * from responds where ((C like '%程式能力不足' or C like '%安裝及申請%') and C <> '') or H like '是' or (J not like '我認為此券商的產品本身系統穩定度夠、具有技術支援、響應時間短' and J <> '');''')
+            'Query 1 - Pain (in SQL)', '''select * from responds where ((C like '%程式能力不足' or C like '%安裝及申請%') and C <> '') or H like '是' or (J not like '我認為此券商的產品本身系統穩定度夠、具有技術支援、響應時間短' and J <> '');''')
 
-        st.sidebar.markdown('第二層和第三層的 table name 為 `output_df`')
+        st.sidebar.success('第二層和第三層的 table name 為 `output_df`')
+
         q2 = st.sidebar.text_area(
-            'Query 2 - Pain + Fit', '''select * from output_df
+            'Query 2 - Pain + Fit (in SQL)', '''select * from output_df
 where N like '台%';''')
         q3 = st.sidebar.text_area(
-            'Query 3 - Pain + Fit + Ready', '''select * from output_df
+            'Query 3 - Pain + Fit + Ready (in SQL)', '''select * from output_df
 where U like 'Python' or U like '%Node%'
 and T not like '完全沒寫%'
 and M = '是';''')
