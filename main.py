@@ -5,6 +5,10 @@ import tempfile
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib.font_manager import FontProperties
+
+
+font = FontProperties(fname=os.path.join("tools", "DFLiHei-Bd.ttc"))
 
 
 def column_loader() -> dict:
@@ -86,6 +90,51 @@ def data_preprocessing(data_dir: str = "data") -> sqlite3.Connection:
     return con
 
 
+def plot_pie_with_raw_data(data: np.ndarray, column_names: dict, title: str, output_dir: str) -> None:
+
+    value_counts = dict()
+    for val in data:
+        for v in val.split("\n"): # Survey Cake format
+            if v not in value_counts:
+                value_counts[v] = 1
+            else:
+                value_counts[v] += 1
+
+    if "其他" not in value_counts:
+        value_counts["其他"] = 0
+
+    # 把有「其他」的都算一起
+    for k in value_counts:
+        if k != "其他" and "其他" in k:
+            value_counts["其他"] += value_counts[k]
+            value_counts[k] = 0
+
+    # 刪掉 count 是 0 的
+    value_counts = dict({k: v for k, v in value_counts.items() if v})
+
+    # 排序，並 truncate 以及算比例
+    counts = list([
+        v
+        for _, v in sorted(value_counts.items(), key=lambda item: -item[1])
+    ])
+    keys = list([
+        "{} ({}%)".format(
+            (k if len(k) < 10 else "{} ...".format(k[:10])) if k != "nan" else "未填答",
+            round(v / sum(list(value_counts.values())) * 100, 2)
+        )
+        for k, v in sorted(value_counts.items(), key=lambda item: -item[1])
+    ])
+
+    plt.figure(dpi=400)
+    plt.pie(counts)
+    plt.legend(keys, prop=font, loc="best")
+    plt.title("「{}」之比例".format(
+        column_names[title] if len(column_names[title]) < 20 else "{} ...".format(column_names[title][:20])
+    ), fontproperties=font)
+    plt.savefig(os.path.join(output_dir, "{}.png".format(title)))
+    plt.close()
+
+
 def main() -> None:
 
     con = data_preprocessing()
@@ -111,6 +160,14 @@ def main() -> None:
             encoding="utf-8",
             index=False
         )
+
+    for key in column_names:
+        if key == "id":
+            # Skip first col
+            continue
+
+        data = pd.read_sql_query("SELECT {} FROM responds".format(key), con=con).to_numpy().flatten()
+        plot_pie_with_raw_data(data, column_names, key, output_dir)
 
 
 if __name__ == "__main__":
