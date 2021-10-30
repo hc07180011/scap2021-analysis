@@ -1,4 +1,4 @@
-# 2021 Fugle <> SCAP Data Analysis
+# SCAP Data Analysis
 
 ## Streamlit 
 
