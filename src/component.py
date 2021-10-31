@@ -7,7 +7,57 @@ import os
 import json
 import pickle
 import uuid
+import pandas as pd
+import numpy as np
+
+import matplotlib.pyplot as plt
 import re
+
+
+def bar_chart(data: np.ndarray, column_names: dict, title: str, output_dir: str) -> None:
+
+    value_counts = dict()
+    for val in data:
+        for v in val.split("\n"):  # Survey Cake format
+            if v not in value_counts:
+                value_counts[v] = 1
+            else:
+                value_counts[v] += 1
+
+    if "其他" not in value_counts:
+        value_counts["其他"] = 0
+
+    # 把有「其他」的都算一起
+    for k in value_counts:
+        if k != "其他" and "其他" in k:
+            value_counts["其他"] += value_counts[k]
+            value_counts[k] = 0
+
+    # 刪掉 count 是 0 的
+    value_counts = dict({k: v for k, v in value_counts.items() if v})
+
+    # 排序，並 truncate 以及算比例
+    counts = list([
+        v for _, v in sorted(value_counts.items(), key=lambda item: -item[1])
+    ])
+    keys = list([
+        "{} ({}%)".format(
+            (k if len(k) < 10 else "{} ...".format(
+                k[:10])) if k != "nan" else "未填答",
+            round(v / len(data) * 100, 2)
+        )
+        for k, v in sorted(value_counts.items(), key=lambda item: -item[1])
+    ])
+
+    plt.figure(dpi=400)
+    plt.pie(counts)
+    plt.legend(keys, prop=font, loc="best")
+    plt.title("「{}」之比例".format(
+        column_names[title] if len(column_names[title]) < 20 else "{} ...".format(
+            column_names[title][:20])
+    ), fontproperties=font)
+    plt.savefig(os.path.join(output_dir, "{}.svg".format(title)))
+    plt.close()
 
 
 def download_button(object_to_download, download_filename, button_text, pickle_it=False):
@@ -93,3 +143,9 @@ def download_button(object_to_download, download_filename, button_text, pickle_i
         f'<a download="{download_filename}" id="{button_id}" href="data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64,{b64}">{button_text}</a><br></br>'
 
     return dl_link
+
+
+@st.cache
+def convert_df(df):
+    # IMPORTANT: Cache the conversion to prevent computation on every rerun
+    return df.to_csv(encoding='utf_8_sig')

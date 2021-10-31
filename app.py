@@ -4,6 +4,8 @@ import pandas as pd
 import pandasql as psql
 from gsheetsdb import connect
 from src import process as ps
+from src.component import convert_df
+from src import segment as seg
 import os
 import streamlit as st
 DEPLOY_TO_HEROKU = False
@@ -27,12 +29,13 @@ st.set_page_config(
 conn = connect()
 
 if not DEPLOY_TO_HEROKU:
-    sheet_url = st.secrets["public_gsheets_url"]
+    public_sheet_url = st.secrets["public_gsheets_url"]
 else:
-    sheet_url = os.environ['PUBLIC_GSHEETS_URL']
+    public_sheet_url = os.environ['PUBLIC_GSHEETS_URL']
 
 mode_selector = ["All", "Public", "Fugle"]
-method_selector = ["Hypo Querying", "Hypo Testing - Funnel"]
+method_selector = ["2021-10-14 | Hypo Querying",
+                   "2021-10-31 | Hypo Testing - Funnel", "2021-11-01 | Fugle Meeting"]
 
 
 def pysqldf(q): return psql.sqldf(q, globals())
@@ -52,26 +55,26 @@ def pd_run_query(query):
     return df
 
 
-@st.cache
-def convert_df(df):
-    # IMPORTANT: Cache the conversion to prevent computation on every rerun
-    return df.to_csv(encoding='utf_8_sig')
-
-
 @st.cache()
-def load_df(include=False):
+def load_df(include=False, will=False, src=mode_selector[1], secs=0):
+    # src: public, fugle, all
     df = pd.read_sql(
-        f'SELECT * FROM "{sheet_url}"', conn)
+        f'SELECT * FROM "{public_sheet_url}"', conn)
     df = df.fillna('')
 
     responds = df.rename(columns=ps.column_loader(inverse=True))
     if not include:
         responds = responds[~(responds['L'] == '尚無投資經驗')]
+    if will:
+        responds = responds[(responds['AB'] == '願意')]
+
+    responds = responds[(responds['AE'] >= secs)]
+
     return responds
 
 
-def test_selector(include=False):
-    responds = load_df(include)
+def test_selector(responds: pd.DataFrame):
+
     global_len = len(responds)
 
     custom_query = st.expander('Need Custom Query?')
@@ -139,7 +142,7 @@ AND    `N` LIKE '%台股市場%';''', height=180)
         )
 
 
-def ta_funnel(include=False, query1='''select * from responds
+def ta_funnel(responds: pd.DataFrame, query1='''select * from responds
 where ((C like '%程式能力不足'
 or C like '%安裝及申請%') and C <> '')
 or H like '是'
@@ -151,7 +154,7 @@ and T not like '完全沒寫%'
 and M = '是';
     """):
     # target audience funnel testing
-    responds = load_df(include).reset_index(drop=True)
+    responds = responds.reset_index(drop=True)
     global_len = len(responds)
 
     # 解決痛點：程式能力不足、覺得安裝或申請麻煩的人、沒聽過但回答「是」的人、認為「我認為此券商的產品本身系統穩定度夠、具有技術支援、響應時間短」重要的人
@@ -342,10 +345,18 @@ and M = '是';
     st.plotly_chart(fig, use_container_width=True)
 
 
-def sidebar_helper(app_method=method_selector[0]):
+def sidebar_helper(app_mode=mode_selector[1], app_method=method_selector[0]):
     # ["Hyp Querying", "Hypo Testing - Funnel"]
+
+    if app_mode == mode_selector[2]:
+        st.sidebar.info('Still empty...')
+        return
+
     include = st.sidebar.checkbox(
         'Including everything! (Default 已篩選掉沒投資過的人)')
+    willingness = st.sidebar.checkbox(
+        '僅篩選出有意願訪談者')
+    secs = st.sidebar.number_input(label='填答秒數下限', min_value=0)
 
     need_help = st.sidebar.expander(
         "🙋🏾‍♂️ Not sure what features are in our data?")
@@ -353,7 +364,7 @@ def sidebar_helper(app_method=method_selector[0]):
         st.json(ps.column_loader())
 
     if app_method == method_selector[0]:
-        test_selector(include=include)
+        test_selector(load_df(include, willingness, src=app_mode, secs=secs))
     elif app_method == method_selector[1]:
 
         q1 = st.sidebar.text_area(
@@ -369,7 +380,10 @@ where N like '台%';''')
 where U like 'Python' or U like '%Node%'
 and T not like '完全沒寫%'
 and M = '是';''')
-        ta_funnel(include, q1, q2, q3)
+        ta_funnel(load_df(include, willingness,
+                  src=app_mode, secs=secs), q1, q2, q3)
+    elif app_method == method_selector[2]:
+        seg.runner(load_df(include, willingness, src=app_mode, secs=secs))
 
 
 def main():
@@ -381,12 +395,7 @@ def main():
     app_method = st.sidebar.selectbox("Select a testing method to continue",
                                       method_selector)
 
-    if app_mode == mode_selector[0]:
-        sidebar_helper(app_method)
-    elif app_mode == mode_selector[1]:
-        sidebar_helper(app_method)
-    elif app_mode == mode_selector[2]:
-        st.sidebar.info('Still empty...')
+    sidebar_helper(app_mode=app_mode, app_method=app_method)
 
     st.sidebar.info(
         'For more info, please check out the `About` section under the Hamburger menu.')
