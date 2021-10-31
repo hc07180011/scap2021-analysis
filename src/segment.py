@@ -157,7 +157,6 @@ def custom_feature_form():
         return return_obj
 
 
-@st.cache(ttl=600)
 def runner(df: pd.DataFrame):
     ta_criteria = default_ta()
     output_df = df.copy()
