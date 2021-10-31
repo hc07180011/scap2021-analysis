@@ -311,7 +311,7 @@ def runner(df: pd.DataFrame):
 
         st.plotly_chart(fig, use_container_width=True)
 
-    load_more_charts = st.checkbox('要載入全部圖檔嗎？')
+    load_more_charts = st.checkbox('要載入全部圖檔嗎？ (會吃大量記憶體噢 🥵)')
     if load_more_charts:
         more_chart = st.expander('More charts 🙈')
 
