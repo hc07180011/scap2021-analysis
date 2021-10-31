@@ -6,7 +6,7 @@ from gsheetsdb import connect
 from src import process as ps
 import os
 import streamlit as st
-DEPLOY_TO_HEROKU = True
+DEPLOY_TO_HEROKU = False
 
 
 EMOJI_URL = "https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/120/twitter/282/chart-increasing_1f4c8.png"
@@ -103,7 +103,8 @@ AND    `N` LIKE '%台股市場%';''', height=180)
         with row0_1:
             st.download_button(
                 label=f"📓 Download ({query_hypo_txt}.csv)",
-                data=convert_df(output_df),
+                data=convert_df(output_df.rename(
+                    columns=ps.column_loader(inverse=True))),
                 file_name=f'{query_hypo_txt}.csv',
                 mime='text/csv',
             )
@@ -214,6 +215,13 @@ and M = '是';
     st.markdown(
         f'{len(output_df)} ({round(len(output_df) / q2_cnt * 100, 2)}%)')
     st.write(output_df)
+
+    st.download_button(
+        label=f"📓 Download (output.csv)",
+        data=convert_df(output_df),
+        file_name=f'output.csv',
+        mime='text/csv',
+    )
 
     # final target customer traits
     st.markdown('## Target Customers')
@@ -329,6 +337,9 @@ and M = '是';
         fig.update_layout(margin=dict(t=0, b=0, l=0, r=0))
 
         st.plotly_chart(fig, use_container_width=True)
+
+    fig = px.histogram(output_df['AE'], x="AE", nbins=20)
+    st.plotly_chart(fig, use_container_width=True)
 
 
 def sidebar_helper(app_method=method_selector[0]):
