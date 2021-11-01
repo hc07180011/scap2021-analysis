@@ -11,10 +11,10 @@ import plotly.express as px
 
 profile_dict = {
     '全選': [],
-    '大鯨魚: 3000 萬以上': [0],
-    '競爭對手的客戶: 有在用永豐 + 實際寫過 API': [2, 6],
-    'Ideal 客戶 I - 分或小時交易: 200-1000 萬成交量 + 分或小時交易 + 會寫程式 + 沒有實際用過 API': [3, 4, 7, 5],
-    'Ideal 客戶 II - 日交易: 200-1000 萬成交量 + 日交易 + 會寫程式 + 沒有實際用過 API': [3, 1, 7, 5],
+    '鯨魚: 3000 萬以上': [0],
+    '競品的用戶: 有在用永豐 + 實際寫過 API': [2, 6],
+    '最理想用戶 I - 分或小時交易: 200-1000 萬成交量 + 分或小時交易 + 會寫程式 + 沒有實際用過 API': [3, 4, 7, 5],
+    '最理想用戶 II - 日交易: 200-1000 萬成交量 + 日交易 + 會寫程式 + 沒有實際用過 API': [3, 1, 7, 5],
 }
 
 
@@ -84,7 +84,8 @@ def get_custom_feature_dict(inverse=False) -> dict:
            16: 'Only 女',
            17: 'Unix',
            18: 'Python or Node.js',
-           19: '台股交易需求'
+           19: '台股交易需求',
+           20: '沒有台股交易需求'
            }
     if inverse:
         cfd = {v: k for k, v in cfd.items()}
@@ -114,6 +115,7 @@ def get_dict(table_name: str) -> dict:
         17: f"SELECT * FROM {table_name} WHERE (UPPER(S) LIKE UPPER('%mac%') OR UPPER(S) LIKE UPPER('%linux%'));",
         18: f"SELECT * FROM {table_name} WHERE (U LIKE '%Python%' OR U LIKE '%Node%');",
         19: f"SELECT * FROM {table_name} WHERE N LIKE '%台股%';",
+        20: f"SELECT * FROM {table_name} WHERE N NOT LIKE '%台股%';",
     }
 
 
