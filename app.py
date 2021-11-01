@@ -30,8 +30,10 @@ conn = connect()
 
 if not DEPLOY_TO_HEROKU:
     public_sheet_url = st.secrets["public_gsheets_url"]
+    fugle_sheet_url = st.secrets["fugle_gsheets_url"]
 else:
     public_sheet_url = os.environ['PUBLIC_GSHEETS_URL']
+    fugle_sheet_url = os.environ['FUGLE_GSHEETS_URL']
 
 mode_selector = ["All", "Public", "Fugle"]
 method_selector = ["2021-10-14 | Hypo Querying",
@@ -58,9 +60,24 @@ def pd_run_query(query):
 @st.cache()
 def load_df(include=False, will=False, src=mode_selector[1], secs=0):
     # src: public, fugle, all
-    df = pd.read_sql(
-        f'SELECT * FROM "{public_sheet_url}"', conn)
-    df = df.fillna('')
+    if src.lower() == 'all':
+        df1 = pd.read_sql(
+            f'SELECT * FROM "{public_sheet_url}"', conn)
+        df1 = df1.fillna('')
+
+        df2 = pd.read_sql(
+            f'SELECT * FROM "{fugle_sheet_url}"', conn)
+        df2 = df2.fillna('')
+        df = df1.append(df2)
+
+    elif src.lower() == 'fugle':
+        df = pd.read_sql(
+            f'SELECT * FROM "{fugle_sheet_url}"', conn)
+        df = df.fillna('')
+    elif src.lower() == 'public':
+        df = pd.read_sql(
+            f'SELECT * FROM "{public_sheet_url}"', conn)
+        df = df.fillna('')
 
     responds = df.rename(columns=ps.column_loader(inverse=True))
     if not include:
