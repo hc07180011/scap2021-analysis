@@ -84,6 +84,7 @@ def get_custom_feature_dict(inverse=False) -> dict:
            16: 'Only 女',
            17: 'Unix',
            18: 'Python or Node.js',
+           19: '台股交易需求'
            }
     if inverse:
         cfd = {v: k for k, v in cfd.items()}
@@ -112,6 +113,7 @@ def get_dict(table_name: str) -> dict:
         16: f"SELECT * FROM {table_name} WHERE W = '女';",
         17: f"SELECT * FROM {table_name} WHERE (UPPER(S) LIKE UPPER('%mac%') OR UPPER(S) LIKE UPPER('%linux%'));",
         18: f"SELECT * FROM {table_name} WHERE (U LIKE '%Python%' OR U LIKE '%Node%');",
+        19: f"SELECT * FROM {table_name} WHERE N LIKE '%台股%';",
     }
 
 
