@@ -85,7 +85,9 @@ def get_custom_feature_dict(inverse=False) -> dict:
            17: 'Unix',
            18: 'Python or Node.js',
            19: '台股交易需求',
-           20: '沒有台股交易需求'
+           20: '沒有台股交易需求',
+           21: '非學生',
+           22: '學生'
            }
     if inverse:
         cfd = {v: k for k, v in cfd.items()}
@@ -116,6 +118,8 @@ def get_dict(table_name: str) -> dict:
         18: f"SELECT * FROM {table_name} WHERE (U LIKE '%Python%' OR U LIKE '%Node%');",
         19: f"SELECT * FROM {table_name} WHERE N LIKE '%台股%';",
         20: f"SELECT * FROM {table_name} WHERE N NOT LIKE '%台股%';",
+        21: f"SELECT * FROM {table_name} WHERE Z <> '學生';",
+        22: f"SELECT * FROM {table_name} WHERE Z = '學生';",
     }
 
 
