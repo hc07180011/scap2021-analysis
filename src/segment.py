@@ -11,6 +11,11 @@ import plotly.express as px
 
 profile_dict = {
     '全選': [],
+    '(新) 嘗鮮人：200 萬以下成交量': [7, 23],
+    '(新) 有望成為 API 交易人：1,000 萬以上成交量': [7, 25],
+    '(新) 普通有望成為 API 交易人：200-1,000 萬成交量': [7, 25],
+    '(新) 無腦大量交易人：1,000 萬以上成交量': [13, 25],
+    '(新) 無腦中量交易人：200-1,000 萬以上成交量': [13, 3],
     '鯨魚: 3000 萬以上': [0],
     '競品的用戶: 有在用永豐 + 實際寫過 API': [2, 6],
     '最理想用戶 I - 分或小時交易: 200-1000 萬成交量 + 分或小時交易 + 會寫程式 + 沒有實際用過 API': [3, 4, 7, 5],
@@ -87,7 +92,10 @@ def get_custom_feature_dict(inverse=False) -> dict:
            19: '台股交易需求',
            20: '沒有台股交易需求',
            21: '非學生',
-           22: '學生'
+           22: '學生',
+           23: '月交易量 200 萬以下',
+           24: '月交易量 200 萬以上',
+           25: '月交易量 1,000 萬以上',
            }
     if inverse:
         cfd = {v: k for k, v in cfd.items()}
@@ -120,6 +128,9 @@ def get_dict(table_name: str) -> dict:
         20: f"SELECT * FROM {table_name} WHERE N NOT LIKE '%台股%';",
         21: f"SELECT * FROM {table_name} WHERE Z <> '學生';",
         22: f"SELECT * FROM {table_name} WHERE Z = '學生';",
+        23: f"SELECT * FROM {table_name} WHERE (P LIKE '50%' OR P LIKE '51%')",
+        24: f"SELECT * FROM {table_name} WHERE (P NOT LIKE '50%' AND P NOT LIKE '51%')",
+        25: f"SELECT * FROM {table_name} WHERE (P LIKE '1,000%' OR P LIKE '3,000%')",
     }
 
 
