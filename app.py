@@ -365,9 +365,9 @@ and M = '是';
 def sidebar_helper(app_mode=mode_selector[1], app_method=method_selector[0]):
     # ["Hyp Querying", "Hypo Testing - Funnel"]
 
-    if app_mode == mode_selector[2]:
-        st.sidebar.info('Still empty...')
-        return
+    # if app_mode == mode_selector[2]:
+    #     st.sidebar.info('Still empty...')
+    #     return
 
     include = st.sidebar.checkbox(
         'Including everything! (Default 已篩選掉沒投資過的人)')
