@@ -36,6 +36,8 @@ else:
     fugle_sheet_url = os.environ['FUGLE_GSHEETS_URL']
 
 mode_selector = ["All", "Public", "Fugle"]
+
+# meeting/method
 method_selector = ["2021-10-14 | Hypo Querying",
                    "2021-10-31 | Hypo Testing - Funnel", "2021-11-01 | Fugle Meeting"]
 
@@ -410,7 +412,7 @@ def main():
                                     mode_selector)
 
     app_method = st.sidebar.selectbox(
-        "Select a testing method to continue", method_selector, 2)
+        "Select a meeting/visualizing method to continue", method_selector, 2)
 
     sidebar_helper(app_mode=app_mode, app_method=app_method)
 
