@@ -5,6 +5,7 @@ import tempfile
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+from src import process as pss
 from matplotlib.font_manager import FontProperties
 
 
@@ -68,11 +69,15 @@ def data_preprocessing(data_dir: str = "data") -> sqlite3.Connection:
             ),
             ignore_index=True
         )
-    
+
     if not len(df):
         raise FileNotFoundError
 
-    os.remove("fugle.db")
+    try:
+        os.remove("fugle.db")
+    except:
+        pass
+
     con = sqlite3.connect("fugle.db")
 
     cur = con.cursor()
@@ -94,7 +99,7 @@ def pie_with_raw_data(data: np.ndarray, column_names: dict, title: str, output_d
 
     value_counts = dict()
     for val in data:
-        for v in val.split("\n"): # Survey Cake format
+        for v in val.split("\n"):  # Survey Cake format
             if v not in value_counts:
                 value_counts[v] = 1
             else:
@@ -119,7 +124,8 @@ def pie_with_raw_data(data: np.ndarray, column_names: dict, title: str, output_d
     ])
     keys = list([
         "{} ({}%)".format(
-            (k if len(k) < 10 else "{} ...".format(k[:10])) if k != "nan" else "未填答",
+            (k if len(k) < 10 else "{} ...".format(
+                k[:10])) if k != "nan" else "未填答",
             round(v / len(data) * 100, 2)
         )
         for k, v in sorted(value_counts.items(), key=lambda item: -item[1])
@@ -129,7 +135,8 @@ def pie_with_raw_data(data: np.ndarray, column_names: dict, title: str, output_d
     plt.pie(counts)
     plt.legend(keys, prop=font, loc="best")
     plt.title("「{}」之比例".format(
-        column_names[title] if len(column_names[title]) < 20 else "{} ...".format(column_names[title][:20])
+        column_names[title] if len(column_names[title]) < 20 else "{} ...".format(
+            column_names[title][:20])
     ), fontproperties=font)
     plt.savefig(os.path.join(output_dir, "{}.svg".format(title)))
     plt.close()
@@ -137,7 +144,7 @@ def pie_with_raw_data(data: np.ndarray, column_names: dict, title: str, output_d
 
 def main() -> None:
 
-    con = data_preprocessing()
+    con = pss.data_preprocessing()
     column_names = column_loader()
 
     output_dir = "outputs"
@@ -161,7 +168,8 @@ def main() -> None:
             index=False
         )
 
-    data = pd.read_sql_query(open(os.path.join("sql", "0.sql"), "r").read(), con=con)
+    data = pd.read_sql_query(
+        open(os.path.join("sql", "0.sql"), "r").read(), con=con)
     for key in column_names:
         if key == "id":
             # Skip first col
