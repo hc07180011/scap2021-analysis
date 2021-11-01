@@ -392,8 +392,8 @@ def main():
     app_mode = st.sidebar.selectbox("Select a channel to continue",
                                     mode_selector)
 
-    app_method = st.sidebar.selectbox("Select a testing method to continue",
-                                      method_selector)
+    app_method = st.sidebar.selectbox(
+        "Select a testing method to continue", method_selector, 2)
 
     sidebar_helper(app_mode=app_mode, app_method=app_method)
 

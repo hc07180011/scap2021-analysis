@@ -10,7 +10,7 @@ import numpy as np
 import plotly.express as px
 
 profile_dict = {
-    '初步篩選': [],
+    '全選': [],
     '大鯨魚: 3000 萬以上': [0],
     '競爭對手的客戶: 有在用永豐 + 實際寫過 API': [2, 6],
     'Ideal 客戶 I - 分或小時交易: 200-1000 萬成交量 + 分或小時交易 + 會寫程式 + 沒有實際用過 API': [3, 4, 7, 5],
@@ -64,22 +64,54 @@ def bar_with_data(data: np.ndarray, x_name: str, y_name: str) -> None:
     return fig
 
 
+def get_custom_feature_dict(inverse=False) -> dict:
+    cfd = {0: '月交易量 3000 萬以上',
+           1: '日交易',
+           2: '有使用過 API trading',
+           3: '月交易量 200-1000 萬',
+           4: '分、小時交易',
+           5: '沒使用過 API 做交易',
+           6: '有在用永豐的人',
+           7: '會寫程式',
+           8: '僅用過套裝軟體',
+           9: '擁有 Portfolio 且有五隻股票以上',
+           10: '月交易量 51-200 萬',
+           11: '月交易量 50 萬以下',
+           12: '月交易量 51-1000 萬',
+           13: '不會寫程式',
+           14: '有一定程式能力（三、四級）',
+           15: 'Only 男',
+           16: 'Only 女',
+           17: 'Unix',
+           18: 'Python or Node.js',
+           }
+    if inverse:
+        cfd = {v: k for k, v in cfd.items()}
+    return cfd
+
+
 def get_dict(table_name: str) -> dict:
 
     return {
-        0: f"select * from {table_name} where P LIKE '3,000%';",
-        1: f"select * from {table_name} where O LIKE '日%';",
-        2: f"select * from {table_name} where A LIKE '實際寫過程式%';",
-        3: f"select * from {table_name} where P LIKE '201%';",
-        4: f"select * from {table_name} where O LIKE '分、小時%';",
-        5: f"select * from {table_name} where A NOT LIKE '實際寫過程式%';",
-        6: f"select * from {table_name} where I LIKE '%永豐%';",
-        7: f"select * from {table_name} where T NOT LIKE '完全沒寫過%';",
-        8: f"select * from {table_name} where A LIKE '使用過套裝軟體%';",
-        9: f"select * from {table_name} where M = '是';",
-        10: f"select * from {table_name} where P LIKE '51%';",
-        11: f"select * from {table_name} where P LIKE '50%';",
-        12: f"select * from {table_name} where P LIKE '51%' OR P LIKE '201%'"
+        0: f"SELECT * FROM {table_name} WHERE P LIKE '3,000%';",
+        1: f"SELECT * FROM {table_name} WHERE O LIKE '日%';",
+        2: f"SELECT * FROM {table_name} WHERE A LIKE '實際寫過程式%';",
+        3: f"SELECT * FROM {table_name} WHERE P LIKE '201%';",
+        4: f"SELECT * FROM {table_name} WHERE O LIKE '分、小時%';",
+        5: f"SELECT * FROM {table_name} WHERE A NOT LIKE '實際寫過程式%';",
+        6: f"SELECT * FROM {table_name} WHERE I LIKE '%永豐%';",
+        7: f"SELECT * FROM {table_name} WHERE T NOT LIKE '完全沒寫過%';",
+        8: f"SELECT * FROM {table_name} WHERE A LIKE '使用過套裝軟體%';",
+        9: f"SELECT * FROM {table_name} WHERE M = '是';",
+        10: f"SELECT * FROM {table_name} WHERE P LIKE '51%';",
+        11: f"SELECT * FROM {table_name} WHERE P LIKE '50%';",
+        12: f"SELECT * FROM {table_name} WHERE P LIKE '51%' OR P LIKE '201%'",
+        13: f"SELECT * FROM {table_name} WHERE T LIKE '完全沒寫過%';",
+        14: f"SELECT * FROM {table_name} WHERE (T NOT LIKE '完全沒寫過%' AND T NOT LIKE '會寫基本的程式%');",
+        15: f"SELECT * FROM {table_name} WHERE W = '男';",
+        16: f"SELECT * FROM {table_name} WHERE W = '女';",
+        17: f"SELECT * FROM {table_name} WHERE (UPPER(S) LIKE UPPER('%mac%') OR UPPER(S) LIKE UPPER('%linux%'));",
+        18: f"SELECT * FROM {table_name} WHERE (U LIKE '%Python%' OR U LIKE '%Node%');",
     }
 
 
@@ -97,49 +129,20 @@ def default_ta():
 
 def custom_feature_form():
     customized = st.expander('Need custom input? 👉🏽')
-    features = [False for f in range(13)]
+    features = [False for _ in range(13)]
     return_obj = None
     with customized:
         with st.form("criteria_form"):
             st.write("Custom Features（我們選出的 criteria - 選項皆為 `AND`）")
-
-            row1_1, row1_2, row1_3 = st.columns((1, 1, 1))
-            with row1_1:
-                features[0] = st.checkbox('月交易量 3000 萬以上')
-            with row1_2:
-                features[1] = st.checkbox('日交易')
-            with row1_3:
-                features[2] = st.checkbox('有使用過 API trading')
-
-            row2_1, row2_2, row2_3 = st.columns((1, 1, 1))
-            with row2_1:
-                features[3] = st.checkbox('月交易量 200-1000 萬')
-            with row2_2:
-                features[4] = st.checkbox('分、小時交易')
-            with row2_3:
-                features[5] = st.checkbox('沒使用過 API 做交易')
-
-            row3_1, row3_2, row3_3 = st.columns((1, 1, 1))
-            with row3_1:
-                features[6] = st.checkbox('有在用永豐的人')
-            with row3_2:
-                features[7] = st.checkbox('有基本程式能力')
-            with row3_3:
-                features[8] = st.checkbox('僅用過套裝軟體')
-
-            row4_1, row4_2, row4_3 = st.columns((1, 1, 1))
-            with row4_1:
-                features[9] = st.checkbox('擁有 Portfolio 且有五隻股票以上')
-            with row4_2:
-                features[10] = st.checkbox('月交易量 51-200 萬')
-            with row4_3:
-                features[11] = st.checkbox('月交易量 50 萬以下')
-
-            features[12] = st.checkbox('月交易量 51-1000 萬')
+            cf_dict = get_custom_feature_dict(True)
+            selected = st.multiselect(
+                label='特定 feature 篩選', options=cf_dict.keys())
+            # for s in selected:
+            #     features[cf_dict[s]]
 
             submitted = st.form_submit_button("Submit")
             if submitted:
-                return_obj = features
+                return_obj = selected
 
         st.markdown("""
                     <center>OR</center>
@@ -168,10 +171,21 @@ def runner(df: pd.DataFrame):
         st.success(f'✍️ 使用 custom profile')
         query_dict = get_dict('output_df')
         if type(custom_feature) is not str:
+            render_str = """"""
             for i in range(len(custom_feature)):
-                if custom_feature[i]:
-                    output_df = psql.sqldf(
-                        query_dict[i], locals())
+                query = query_dict[get_custom_feature_dict(
+                    True)[custom_feature[i]]]  # no#
+                output_df = psql.sqldf(
+                    query, locals())
+                if i == 0:
+                    render_str += (
+                        f'''+ 篩出「{custom_feature[i]}」: {len(output_df)} out of {ori_len} ({round(len(output_df) / ori_len * 100, 2)}%)\n''')
+                else:
+                    render_str += (
+                        f'''+ 篩出「{custom_feature[i]}」: {len(output_df)} out of {pre_len} ({round(len(output_df) / pre_len * 100, 2)}%)\n''')
+                pre_len = len(output_df)
+
+            st.markdown(render_str, unsafe_allow_html=True)
         else:
             output_df = psql.sqldf(
                 custom_feature, locals())
