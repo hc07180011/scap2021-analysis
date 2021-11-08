@@ -8,11 +8,11 @@ import matplotlib.pyplot as plt
 market_name = "BTC-PERP"
 base_url = "https://ftx.com/api/markets/{}/candles".format(market_name)
 
-req_args = {
+req_args = dict({
     "resolution": "300",
     "start_time": time.mktime(time.strptime('2021-01-01 00:00:00', '%Y-%m-%d %H:%M:%S')),
     "end_time": time.mktime(time.strptime('2021-07-01 23:59:59', '%Y-%m-%d %H:%M:%S'))
-}
+})
 
 respond = requests.get(base_url, params=req_args)
 history_data = json.loads(respond.text)["result"]
