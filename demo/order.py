@@ -24,8 +24,8 @@ signature_payload = f"{ts}{prepared.method}{prepared.path_url}".encode()
 if prepared.body:
     signature_payload += prepared.body
 
-API_KEY = "ZEM121gMc2G-TH1WHuAXYSMZX_yY3bJQ3RdJInSu" // You have to replace this
-API_SECRET = "PqpL-ysuDEI4QDNjA-aThqtf62L5qKBHJ4B4kkxe" // You have to replace this
+API_KEY = "ZEM121gMc2G-TH1WHuAXYSMZX_yY3bJQ3RdJInSu" # You have to replace this
+API_SECRET = "PqpL-ysuDEI4QDNjA-aThqtf62L5qKBHJ4B4kkxe" # You have to replace this
 
 signature = hmac.new(
     API_SECRET.encode(),
