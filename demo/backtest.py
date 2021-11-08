@@ -11,7 +11,7 @@ base_url = "https://ftx.com/api/markets/{}/candles".format(market_name)
 req_args = {
     "resolution": "300",
     "start_time": time.mktime(time.strptime('2021-01-01 00:00:00', '%Y-%m-%d %H:%M:%S')),
-    "end_time": time.mktime(time.strptime('2021-02-01 23:59:59', '%Y-%m-%d %H:%M:%S'))
+    "end_time": time.mktime(time.strptime('2021-07-01 23:59:59', '%Y-%m-%d %H:%M:%S'))
 }
 
 respond = requests.get(base_url, params=req_args)
@@ -25,12 +25,16 @@ def moving_average(a, n):
     return ret[n - 1:] / n
 
 
-# plt.figure(figsize=(16, 4), dpi=200)
-# plt.plot(history_price)
-# plt.plot(moving_average(history_price, 12)) # 1 hour
-# plt.plot(moving_average(history_price, 60)) # 5 hour
-# plt.legend(["Price", "MA12", "MA60"])
-# plt.savefig("test.png")
+def plot_history(price):
+    plt.figure(figsize=(16, 4), dpi=200)
+    plt.plot(price)
+    plt.plot(moving_average(price, 12)) # 1 hour
+    plt.plot(moving_average(price, 60)) # 5 hour
+    plt.legend(["Price", "MA12", "MA60"])
+    plt.savefig("history.png")
+
+
+plot_history(history_price)
 
 sma_len = 12
 lma_len = 60
@@ -51,4 +55,4 @@ for i, j in zip(range(lma_len, len(history_price) - 1), range(len(history_price)
             asset = (stock * history_price[i]) * (1 - fee)
             stock = 0.0
 
-print(asset, stock * history_price[-1] * (1 - fee))
+print("Final asset: {}".format(asset + stock * history_price[-1] * (1 - fee)))
