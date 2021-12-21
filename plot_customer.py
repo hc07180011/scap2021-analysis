@@ -19,13 +19,13 @@ community_history = list()
 
 n = 7
 for i in range(n):
-    yt_history.append(yt_final_target / (n - 1) * i)
+    yt_history.append(round(yt_final_target / (n - 1) * i))
 hahow_history = list([0.0, 0.0, 0.0, 0.0, 60.0, 180.0, 300.0])
 n = 6
 for i in range(1):
     community_history.append(0.0)
 for i in range(n):
-    community_history.append(community_final_target / (n - 1) * i)
+    community_history.append(round(community_final_target / (n - 1) * i))
 
 # cost-revenue
 plt.figure(dpi=200, figsize=(16, 8))
