@@ -20,12 +20,9 @@ community_history = list()
 n = 7
 for i in range(n):
     yt_history.append(yt_final_target / (n - 1) * i)
+hahow_history = list([0.0, 0.0, 0.0, 0.0, 60.0, 180.0, 300.0])
 n = 6
-hahow_history.append(0.0)
-for i in range(n):
-    hahow_history.append(hahow_final_target / (n - 1) * i)
-n = 4
-for i in range(3):
+for i in range(1):
     community_history.append(0.0)
 for i in range(n):
     community_history.append(community_final_target / (n - 1) * i)
@@ -63,4 +60,11 @@ for i in range(7):
 plt.xticks([0, 4, 8, 12, 16, 20, 24], time_series, fontproperties=font)
 plt.xlabel("月份", fontproperties=font)
 plt.ylabel("預期獲得人數", fontproperties=font)
-plt.savefig("test.png")
+
+ax=plt.gca()
+ax.get_yaxis().set_visible(False)
+ax.spines["left"].set_visible(False)
+ax.spines["right"].set_visible(False)
+ax.spines["top"].set_visible(False)
+
+plt.savefig("test.png", bbox_inches="tight", pad_inches=0.1, transparent=True)
