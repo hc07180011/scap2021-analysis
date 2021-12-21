@@ -20,11 +20,15 @@ community_history = list()
 n = 7
 for i in range(n):
     yt_history.append(yt_final_target / (n - 1) * i)
-    community_history.append(community_final_target / (n - 1) * i)
 n = 6
 hahow_history.append(0.0)
 for i in range(n):
     hahow_history.append(hahow_final_target / (n - 1) * i)
+n = 4
+for i in range(3):
+    community_history.append(0.0)
+for i in range(n):
+    community_history.append(community_final_target / (n - 1) * i)
 
 # cost-revenue
 plt.figure(dpi=200, figsize=(16, 8))
@@ -32,18 +36,21 @@ for i in range(7):
     if i:
         bottom = (yt_history[i-1] + hahow_history[i-1] + community_history[i-1])
         plt.plot(((i - 1) * 4 + 0.4, (i - 1) * 4 + 1 - 0.4), (bottom, bottom), c="gray", linewidth=0.5)
-        plt.bar((i - 1) * 4 + 1, yt_history[i] - yt_history[i-1], bottom=bottom, color="gold")
+        plt.bar((i - 1) * 4 + 1, yt_history[i] - yt_history[i-1], bottom=bottom, color="blanchedalmond")
         plt.annotate("{}".format(round(yt_history[i] - yt_history[i-1])), ((i - 1) * 4 + 1, bottom - 15), c="gray")
+        plt.annotate("YT", ((i - 1) * 4 + 1 - 0.2, bottom + yt_history[i] - yt_history[i-1] + 10), c="gray")
         
         bottom = (yt_history[i-1] + hahow_history[i-1] + community_history[i-1] + (yt_history[i] - yt_history[i-1]))
         plt.plot(((i - 1) * 4 + 1 + 0.4, (i - 1) * 4 + 2 - 0.4), (bottom, bottom), c="gray", linewidth=0.5)
-        plt.bar((i - 1) * 4 + 2, hahow_history[i] - hahow_history[i-1], bottom=bottom, color="gold")
+        plt.bar((i - 1) * 4 + 2, hahow_history[i] - hahow_history[i-1], bottom=bottom, color="navajowhite")
         plt.annotate("{}".format(round(hahow_history[i] - hahow_history[i-1])), ((i - 1) * 4 + 2, bottom - 15), c="gray")
+        plt.annotate("Hahow", ((i - 1) * 4 + 2 - 0.5, bottom + hahow_history[i] - hahow_history[i-1] + 10), c="gray")
         
         bottom = (yt_history[i-1] + hahow_history[i-1] + community_history[i-1] + (yt_history[i] - yt_history[i-1]) + (hahow_history[i] - hahow_history[i-1]))
         plt.plot(((i - 1) * 4 + 2 + 0.4, (i - 1) * 4 + 3 - 0.4), (bottom, bottom), c="gray", linewidth=0.5)
         plt.bar((i - 1) * 4 + 3, community_history[i] - community_history[i-1], bottom=bottom, color="gold")
         plt.annotate("{}".format(round(community_history[i] - community_history[i-1])), ((i - 1) * 4 + 3, bottom - 15), c="gray")
+        plt.annotate("社群", ((i - 1) * 4 + 3 - 0.3, bottom + community_history[i] - community_history[i-1] + 10), c="gray", fontproperties=font)
 
         top = yt_history[i] + hahow_history[i] + community_history[i]
         plt.plot(((i - 1) * 4 + 3 + 0.4, (i - 1) * 4 + 4 - 0.4), (top, top), c="gray", linewidth=0.5)
