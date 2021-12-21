@@ -56,7 +56,9 @@ for i in range(7):
         plt.plot(((i - 1) * 4 + 3 + 0.4, (i - 1) * 4 + 4 - 0.4), (top, top), c="gray", linewidth=0.5)
 
     plt.bar(i * 4, yt_history[i] + hahow_history[i] + community_history[i], width=0.8, color="darkorange")
-    plt.annotate("{} 名用戶".format(round(yt_history[i] + hahow_history[i] + community_history[i])), (i * 4 - 0.5, yt_history[i] + hahow_history[i] + community_history[i] + 10), fontproperties=font)
+    plt.plot((i * 4 - 1.5, i * 4), (yt_history[i] + hahow_history[i] + community_history[i] + 65, yt_history[i] + hahow_history[i] + community_history[i]), c="gray", linewidth=0.5)
+    plt.annotate("{} 名用戶".format(round(yt_history[i] + hahow_history[i] + community_history[i])), (i * 4 - 2 - 0.5, yt_history[i] + hahow_history[i] + community_history[i] + 75), fontsize=14, fontproperties=font)
+    plt.scatter(0, yt_history[i] + hahow_history[i] + community_history[i] + 100, s=0.1)
 
 plt.xticks([0, 4, 8, 12, 16, 20, 24], time_series, fontproperties=font)
 plt.xlabel("月份", fontproperties=font)
