@@ -36,6 +36,10 @@ for i in range(1):
 for i in range(n):
     community_history.append(round(community_final_target / (n - 1) * i))
 
+print(yt_history,
+      hahow_history,
+      community_history)
+
 # cost-revenue
 plt.figure(dpi=200, figsize=(16, 8))
 for i in range(7):
