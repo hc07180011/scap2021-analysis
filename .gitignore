@@ -2,6 +2,8 @@ src/tmp.py
 .streamlit/secrets.toml
 
 test.png
+data/*.json*
+img/secrets
 
 # Created by https://www.toptal.com/developers/gitignore/api/python,linux,macos
 # Edit at https://www.toptal.com/developers/gitignore?templates=python,linux,macos
