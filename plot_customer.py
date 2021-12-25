@@ -42,25 +42,25 @@ for i in range(7):
     if i:
         bottom = (yt_history[i-1] + hahow_history[i-1] +
                   community_history[i-1])
-        plt.plot(((i - 1) * 4 + 0.4, (i - 1) * 4 + 1 - 0.4),
+        plt.plot(((i - 1) * 4 + 0 + 0.4, (i - 1) * 4 + 1 - 0.4),
                  (bottom, bottom), c="gray", linewidth=0.5)
         plt.bar((i - 1) * 4 + 1,
-                yt_history[i] - yt_history[i-1], bottom=bottom, color="navajowhite", width=BAR_WIDTH)
+                hahow_history[i] - hahow_history[i-1], bottom=bottom, color="gold", width=BAR_WIDTH)
         plt.annotate("{}".format(round(
-            yt_history[i] - yt_history[i-1])), ((i - 1) * 4 + 1, bottom - 15), c="gray")
-        plt.annotate("YT", ((i - 1) * 4 + 1 - 0.2, bottom +
-                     yt_history[i] - yt_history[i-1] + 10), c="gray")
+            hahow_history[i] - hahow_history[i-1])), ((i - 1) * 4 + 1, bottom - 15), c="gray")
+        plt.annotate("Hahow", ((i - 1) * 4 + 1 - 0.5, bottom +
+                     hahow_history[i] - hahow_history[i-1] + 10), c="gray")
 
         bottom = (yt_history[i-1] + hahow_history[i-1] +
-                  community_history[i-1] + (yt_history[i] - yt_history[i-1]))
+                  community_history[i-1] + (hahow_history[i] - hahow_history[i-1]))
         plt.plot(((i - 1) * 4 + 1 + 0.4, (i - 1) * 4 + 2 - 0.4),
                  (bottom, bottom), c="gray", linewidth=0.5)
         plt.bar((i - 1) * 4 + 2,
-                hahow_history[i] - hahow_history[i-1], bottom=bottom, color="gold", width=BAR_WIDTH)
+                yt_history[i] - yt_history[i-1], bottom=bottom, color="navajowhite", width=BAR_WIDTH)
         plt.annotate("{}".format(round(
-            hahow_history[i] - hahow_history[i-1])), ((i - 1) * 4 + 2, bottom - 15), c="gray")
-        plt.annotate("Hahow", ((i - 1) * 4 + 2 - 0.5, bottom +
-                     hahow_history[i] - hahow_history[i-1] + 10), c="gray")
+            yt_history[i] - yt_history[i-1])), ((i - 1) * 4 + 2, bottom - 15), c="gray")
+        plt.annotate("YT", ((i - 1) * 4 + 2 - 0.2, bottom +
+                     yt_history[i] - yt_history[i-1] + 10), c="gray")
 
         bottom = (yt_history[i-1] + hahow_history[i-1] + community_history[i-1] + (
             yt_history[i] - yt_history[i-1]) + (hahow_history[i] - hahow_history[i-1]))
